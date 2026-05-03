@@ -1,7 +1,7 @@
 fastapi
 uvicorn
-langchain
+langchain==0.1.17
+langchain-core==0.1.52
 langchain-groq
-pydantic
 python-dotenv
-gradio
+requests
