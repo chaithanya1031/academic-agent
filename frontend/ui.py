@@ -4,7 +4,7 @@ import requests
 import time
 import json
 
-API_URL = "http://127.0.0.1:8000/ask"
+API_URL = "https://academic-agent-ycnm.onrender.com/ask"
 
 st.set_page_config(page_title="Academic Agent", layout="centered")
 
