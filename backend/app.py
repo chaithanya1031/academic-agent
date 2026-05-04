@@ -9,6 +9,12 @@ import os
 from dotenv import load_dotenv
 import os
 
+import google.generativeai as genai
+
+genai.configure(api_key=os.getenv("GOOGLE_API_KEY"))
+
+google_model = genai.GenerativeModel("models/gemini-2.0-flash")
+
 load_dotenv()
 # ---------- LLM ----------
 model = ChatGroq(
@@ -63,7 +69,13 @@ agent = initialize_agent(
         "prefix": "You are a helpful assistant. answer directly.  Do NOT show reasoning."
     }
 )
+def run_groq_agent(query: str):
+    return agent.run(query)
 
+
+def run_google_llm(query: str):
+    response = google_model.generate_content(query)
+    return response.text
 # ---------- API ----------
 app = FastAPI()
 
@@ -72,12 +84,44 @@ class Query(BaseModel):
 
 @app.post("/ask")
 def ask(q: Query):
+    # 1️⃣ Try Groq first
     try:
-        response = agent.run(q.input)
-        return {"response": response}
-    except Exception as e:
-        return {"error": str(e)}
+        response = run_groq_agent(q.input)
+        return {
+            "response": response,
+            "provider": "groq"
+        }
 
+    except Exception as groq_error:
+        # 🔒 Visible only in logs
+        print("Groq failed:", groq_error)
+
+        # 2️⃣ Fallback to Google
+        try:
+            response = run_google_llm(q.input)
+            return {
+                "response": response,
+                "provider": "google"
+            }
+
+        except Exception as google_error:
+            print("Google failed:", google_error)
+
+            # 3️⃣ Retry Groq
+            try:
+                response = run_groq_agent(q.input)
+                return {
+                    "response": response,
+                    "provider": "groq-retry"
+                }
+
+            except Exception as final_error:
+                print("Final failure:", final_error)
+
+                # 🔒 Clean user-safe message
+                return {
+                    "response": "Sorry, the system is temporarily unavailable. Please try again."
+                }
 @app.get("/")
 def root():
     return {"status": "running", "version": "v1"}
