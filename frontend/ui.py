@@ -68,7 +68,8 @@ if prompt := st.chat_input("Ask something..."):
             start_time = time.time()
 
             try:
-                res = requests.post(API_URL, json={"input": prompt}, timeout=60)
+                requests.get("https://academic-agent-ycnm.onrender.com/", timeout=10)
+                res = requests.post(API_URL, json={"input": prompt}, timeout=120)
                 data = res.json()
 
                 reply = str(data.get("response", data.get("error", "No response")))
