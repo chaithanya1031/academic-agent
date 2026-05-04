@@ -5,3 +5,4 @@ langchain-core==0.1.52
 langchain-groq
 python-dotenv
 requests
+google-generativeai
